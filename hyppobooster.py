@@ -1,9 +1,24 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
+import sys
+import subprocess
 
 st.set_page_config(page_title="HippoBoost", layout="wide")
 st.title("🐎 HippoBoost - Tirages Quinté+ intelligents")
+
+# Vérifie et installe automatiquement les dépendances manquantes (Windows)
+def auto_install():
+    required = ['streamlit', 'pandas', 'plotly']
+    for pkg in required:
+        try:
+            __import__(pkg)
+        except ImportError:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', pkg])
+
+if os.name == 'nt':
+    auto_install()
 
 # Chargement des données
 @st.cache_data
@@ -50,4 +65,11 @@ with col2:
         with st.expander(f"Tirage {i + 1}"):
             st.table(tirage)
 
-st.caption("Développé avec ❤️ par RUNGEN Sunny LIGHTWORKS INGENIERIE")
+st.caption("Développé avec ❤️ par TonNom")
+
+# Point d'entrée pour un exécutable Windows avec PyInstaller
+if __name__ == "__main__":
+    if getattr(sys, 'frozen', False):
+        os.system("streamlit run " + sys.executable)
+    else:
+        os.system("streamlit run " + os.path.basename(__file__))
