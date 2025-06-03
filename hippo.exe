@@ -1,0 +1,89 @@
+# HippoBoost: Application Quinté+ en Exécutable Windows
+import os
+import sys
+import subprocess
+import shutil
+import winshell
+from win32com.client import Dispatch
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+
+APP_NAME = "HippoBoost"
+APP_FILE = os.path.abspath(__file__)
+
+# Installation automatique des dépendances
+REQUIRED_PACKAGES = ['streamlit', 'pandas', 'plotly', 'pywin32']
+def install_dependencies():
+    for pkg in REQUIRED_PACKAGES:
+        try:
+            __import__(pkg)
+        except ImportError:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
+
+# Création d'un raccourci sur le bureau
+def create_desktop_shortcut():
+    desktop = winshell.desktop()
+    path = os.path.join(desktop, f"{APP_NAME}.lnk")
+    target = sys.executable
+    working_directory = os.path.dirname(sys.executable)
+    arguments = f'-m streamlit run "{APP_FILE}"'
+
+    shell = Dispatch('WScript.Shell')
+    shortcut = shell.CreateShortCut(path)
+    shortcut.TargetPath = target
+    shortcut.Arguments = arguments
+    shortcut.WorkingDirectory = working_directory
+    shortcut.IconLocation = target
+    shortcut.save()
+
+# Interface Streamlit principale
+@st.cache_data
+def load_data():
+    data = {
+        "Numéro": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "Nom": ["Alpha", "Bravo", "Celtic", "Delta", "Echo", "Fuego", "Goliath", "Hélios", "Iris", "Joker"],
+        "Forme_Récente": [88, 92, 85, 90, 78, 94, 80, 87, 91, 89],
+        "Terrain_Affinité": [85, 90, 80, 75, 82, 89, 76, 88, 91, 79],
+        "Santé": [95, 87, 90, 88, 84, 93, 86, 92, 94, 89],
+        "Météo_Sensibilité": [90, 86, 89, 87, 88, 85, 91, 86, 90, 92],
+        "Cote_Parieurs": [3.5, 4.2, 6.0, 5.1, 8.5, 3.0, 10.0, 4.8, 3.8, 5.5]
+    }
+    return pd.DataFrame(data)
+
+def show_app():
+    st.set_page_config(page_title="HippoBoost", layout="wide")
+    st.title("🐎 HippoBoost - Tirages Quinté+ intelligents")
+    
+    df = load_data()
+    df["SGPP"] = (
+        0.30 * df["Forme_Récente"] +
+        0.20 * df["Terrain_Affinité"] +
+        0.20 * df["Santé"] +
+        0.15 * df["Météo_Sensibilité"] +
+        0.15 * (100 - df["Cote_Parieurs"] * 10)
+    )
+    sorted_df = df.sort_values(by="SGPP", ascending=False).reset_index(drop=True)
+
+    col1, col2 = st.columns([2, 3])
+    with col1:
+        st.subheader("📊 Classement par SGPP")
+        st.dataframe(sorted_df[["Numéro", "Nom", "SGPP"]])
+
+        st.subheader("📈 Visualisation SGPP")
+        fig = px.bar(sorted_df, x="Nom", y="SGPP", color="SGPP", color_continuous_scale="viridis")
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.subheader("🎯 Tirages Quinté+ optimisés")
+        for i in range(5):
+            tirage = sorted_df.loc[i:i+4, ["Numéro", "Nom"]]
+            with st.expander(f"Tirage {i + 1}"):
+                st.table(tirage)
+
+    st.caption("Développé avec ❤️ par RUNGEN Sunny LIGHWORKS INGENIERIE")
+
+if __name__ == '__main__':
+    install_dependencies()
+    create_desktop_shortcut()
+    show_app()
