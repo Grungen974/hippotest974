@@ -65,7 +65,7 @@ with col2:
         with st.expander(f"Tirage {i + 1}"):
             st.table(tirage)
 
-st.caption("Développé avec ❤️ par TonNom")
+st.caption("Développé avec ❤️ par RUNGEN Sunny LIGHTWORKS INGENIERIE")
 
 # Point d'entrée pour un exécutable Windows avec PyInstaller
 if __name__ == "__main__":
